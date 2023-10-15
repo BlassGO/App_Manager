@@ -1,12 +1,18 @@
 //By @BlassGO
+//I must also thank forums with very useful information
 
 import android.app.ActivityManager;
 import android.app.ActivityThread;
+import android.app.ContextImpl;
+import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Looper;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -20,7 +26,7 @@ public class Main {
         String str3;
         PrintStream printStream = System.out;
         StringBuilder sb = new StringBuilder();
-        if (args.length == 0 || (str = NextArg(args, "-icon")) == null) {
+        if (args.length == 0) {
             str = null;
             StringBuilder append = sb.append((Object) "USER:");
             try {
@@ -30,10 +36,18 @@ public class Main {
             }
             printStream.println(append.append((Object) str2).toString());
         } else {
-            new File(str).mkdirs();
+            boolean rm = HasArg(args, "-rm");
+            if (str = NextArg(args, "-icon")) != null) {
+                File file = new File(str);
+                if (rm) {
+                    rm(file);
+                }
+                file.mkdirs();
+            }
         }
         Looper.prepareMainLooper();
-        PackageManager packageManager = ActivityThread.systemMain().getSystemContext().getPackageManager();
+        ContextImpl systemContext = ActivityThread.systemMain().getSystemContext();
+        PackageManager packageManager = systemContext.getPackageManager();
         for (ApplicationInfo ai : packageManager.getInstalledApplications(8192)) {
             PrintStream printStream2 = System.out;
             StringBuilder sb2 = new StringBuilder();
@@ -46,12 +60,14 @@ public class Main {
                 }
                 printStream2.println(sb2.append((Object) str3).append(":").append((Object) ((ai.flags & 1) != 0 ? "SYSTEM" : "USER")).append(":").append(ai.uid).append(":").append(ai.packageName).append(":").append(ai.publicSourceDir).append(":").append((Object) packageManager.getApplicationLabel(ai)).toString());
             } else {
-                StringBuilder append2 = sb2.append(str).append("/");
-                String str4 = ai.packageName;
-                try {
-                    new Main().DrawableAsPng(packageManager.getApplicationIcon(str4), append2.append(str4).append(".png").toString());
-                } catch (RuntimeException | Exception unused3) {
-                    printStream2.println("null:" + ai.packageName);
+                String str3 = ai.packageName;
+                String sb3 = sb2.append(str).append("/").append(str3).append(".png").toString();
+                if (!new File(sb3).exists()) {
+                    try {
+                        new Main().DrawableAsPng(loadIcon(str3, systemContext), sb3);
+                    } catch (RuntimeException | Exception unused2) {
+                        printStream2.println("null:" + ai.packageName);
+                    }
                 }
             }
         }
@@ -62,11 +78,13 @@ public class Main {
         int intrinsicHeight = drawable.getIntrinsicHeight();
         Bitmap createBitmap = Bitmap.createBitmap(intrinsicWidth, intrinsicHeight, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(createBitmap);
+        createBitmap.eraseColor(0);
         drawable.setBounds(0, 0, intrinsicWidth, intrinsicHeight);
         drawable.draw(canvas);
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(new File(str));
             createBitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream);
+            fileOutputStream.flush();
             fileOutputStream.close();
             PrintStream printStream = System.out;
             printStream.println("icon:" + str);
@@ -81,11 +99,13 @@ public class Main {
         int intrinsicHeight = drawable.getIntrinsicHeight();
         Bitmap createBitmap = Bitmap.createBitmap(intrinsicWidth, intrinsicHeight, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(createBitmap);
+        createBitmap.eraseColor(0);
         drawable.setBounds(0, 0, intrinsicWidth, intrinsicHeight);
         drawable.draw(canvas);
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(new File(str));
             createBitmap.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream);
+            fileOutputStream.flush();
             fileOutputStream.close();
             PrintStream printStream = System.out;
             printStream.println("icon:" + str);
@@ -102,5 +122,51 @@ public class Main {
             }
         }
         return null;
+    }
+
+    public static boolean HasArg(String[] strArr, String str) {
+        for (String str2 : strArr) {
+            if (str.equals(str2)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static void rm(File file) {
+        if (file.isDirectory()) {
+            for (File file2 : file.listFiles()) {
+                rm(file2);
+            }
+        }
+        file.delete();
+    }
+
+    public static Drawable loadIcon(String str, Context context) {
+        Drawable drawableForDensity;
+        PackageManager packageManager = context.getPackageManager();
+        if (Build.VERSION.SDK_INT >= 15) {
+            try {
+                PackageInfo packageInfo = packageManager.getPackageInfo(str, 0);
+                Context createPackageContext = context.createPackageContext(str, 2);
+                int[] iArr = {320, 240, 213};
+                for (int i = 0; i < 3; i++) {
+                    try {
+                        drawableForDensity = createPackageContext.getResources().getDrawableForDensity(packageInfo.applicationInfo.icon, iArr[i]);
+                    } catch (Resources.NotFoundException e) {
+                    }
+                    if (drawableForDensity != null) {
+                        return drawableForDensity;
+                    }
+                }
+            } catch (Exception e2) {
+                //Nothing
+            }
+        }
+        try {
+            return packageManager.getApplicationInfo(str, 128).loadIcon(packageManager);
+        } catch (PackageManager.NameNotFoundException e3) {
+            return null;
+        }
     }
 }

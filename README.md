@@ -4,7 +4,8 @@
 ## Usage
    For individual execution (outside of an app) the use of `app_process` is recommended. You can define the executable in the global shell variable `CLASSPATH`. Then call app_process to start the execution of the `Main` class.
    ```bash
-   export CLASSPATH=/sdcard/app_manager; app_process / Main
+   export CLASSPATH=/sdcard/app_manager
+   app_process / Main
    ```
     
    The first line that is printed by default is the user. In case of error the ID will be `null`.
@@ -16,9 +17,17 @@
    ```
    <ENABLED/DISABLED/UNINSTALLED>:<SYSTEM/USER>:<ID>:<PACKAGE>:<PATH>:<LABEL>
    ```
+   
    If you want to extract app icons, you must use the `-icon` parameter followed by the destination path.
    ```bash
-   export CLASSPATH=/sdcard/app_manager; app_process / Main -icon /sdcard/icons
+   export CLASSPATH=/sdcard/app_manager
+   app_process / Main -icon /sdcard/icons
+   ```
+
+   By default, icon extraction does not overwrite files, this prevents the extraction of already existing icons in the destination. If you want to ensure that the destination folder is removed first, you must specify the `-rm` parameter.
+   ```bash
+   export CLASSPATH=/sdcard/app_manager
+   app_process / Main -rm -icon /sdcard/icons
    ```
    
    Impressions change when using icon extraction.
