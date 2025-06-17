@@ -1,47 +1,52 @@
-## INFO
-   Executable for DalvikVM (Android), which allows you to obtain the current user ID (Integer), as well as general information about all system and user apps, such as their status (ENABLED/DISABLED/UNINSTALLED), their membership (SYSTEM/USER ), its ID, its package, its path and its common name (Label). It also allows the extraction of app icons to an external path within the device (as PNGs).
+# INFO
+Executable for DalvikVM (Android) that retrieves the current user ID (Integer) and detailed information about all system and user apps, including their status (ENABLED/DISABLED/UNINSTALLED), membership (SYSTEM/USER), ID, package, path, and common name (Label). It also supports extracting app icons to an external path as PNGs and optionally zipping them.
 
 ## Usage
-   For individual execution (outside of an app) the use of `app_process` is recommended. You can define the executable in the global shell variable `CLASSPATH`. Then call app_process to start the execution of the `Main` class.
-   ```bash
-   adb shell "export CLASSPATH=/sdcard/app_manager; app_process / Main"
-   ```
-    
-   The first line that is printed by default is the user. In case of error the ID will be `null`.
-   ```
-   USER:<ID>
-   ```
-   
-   Then, all the available apps are printed, following this format:
-   ```
-   <ENABLED/DISABLED/UNINSTALLED>:<SYSTEM/USER>:<ID>:<PACKAGE>:<PATH>:<LABEL>
-   ```
-   
-   If you want to extract app icons, you must use the `-icon` parameter followed by the destination path.
-   ```bash
-   adb shell "export CLASSPATH=/sdcard/app_manager; app_process / Main -icon /sdcard/icons"
-   ```
+For standalone execution (outside an app), use `app_process`. Set the executable in the global shell variable `CLASSPATH`, then call `app_process` to run the `Main` class:
+```bash
+adb shell "export CLASSPATH=/sdcard/app_manager; app_process / Main"
+```
 
-   By default, icon extraction does not overwrite files, this prevents the extraction of already existing icons in the destination. If you want to ensure that the destination folder is removed first, you must specify the `-rm` parameter.
-   ```bash
-   adb shell "export CLASSPATH=/sdcard/app_manager; app_process / Main -rm -icon /sdcard/icons"
-   ```
-   
-   Impressions change when using icon extraction.
-   ```
-   icon:<DEST>/<PACKAGE>.png
-   ```
-   
-   If there are apps that do not provide an icon, the following will be printed. In case there is an error during compression to `PNG`, a printout of the exception produced will also be included.
-   ```
-   null:<PACKAGE>
-   ```
+### Retrieve User and App Information
+Running without arguments prints the current user ID first. If an error occurs, the ID will be `null`:
+```
+USER:<ID>
+```
+Followed by details of all available apps in this format:
+```
+<ENABLED/DISABLED/UNINSTALLED>:<SYSTEM/USER>:<ID>:<PACKAGE>:<PATH>:<LABEL>
+```
 
-## REMARKS   
-   > Individual execution is intended for `adb shell` where you have certain configurations and special permissions. If you want to run in a low-privileged shell, you probably won't be able to get information like the current user ID. Also, it is necessary to ensure a suitable environment, it is not recommended to call `/system/bin/app_process` directly if not available by default, it is better to define the path `/system/bin` inside the `PATH` variable.
-   
+### Extract App Icons
+To extract app icons, use the `-icon` parameter followed by the destination path:
+```bash
+adb shell "export CLASSPATH=/sdcard/app_manager; app_process / Main -icon /sdcard/icons"
+```
+Icon extraction skips existing files to avoid overwrites. To ensure the destination folder is cleared first, add the `-rm` parameter:
+```bash
+adb shell "export CLASSPATH=/sdcard/app_manager; app_process / Main -rm -icon /sdcard/icons"
+```
+Output changes to show extracted icons:
+```
+icon:<DEST>/<PACKAGE>.png
+```
+If an app lacks an icon or PNG compression fails, the output includes the error:
+```
+null:<PACKAGE>
+```
+
+### Extract and Zip App Icons
+To extract icons and create a zip file, combine `-icon` with `-zip` followed by the zip file path:
+```bash
+adb shell "export CLASSPATH=/sdcard/app_manager; app_process / Main -icon /sdcard/icons -zip /sdcard/icons.zip"
+```
+This extracts icons to the specified path (as above) and creates a zip file containing all extracted PNGs. Use `-rm` with `-icon` to clear the destination folder before extraction, if needed.
+
+## REMARKS
+> Standalone execution is designed for `adb shell` with specific configurations and permissions. In a low-privileged shell, information like the current user ID may be unavailable. Ensure a suitable environment; avoid calling `/system/bin/app_process` directly unless available by default. Instead, include `/system/bin` in the `PATH` variable.
+
 ## Credits
-* Me (BlassGO)
+* Me ([BlassGO](https://github.com/BlassGO))
 
 ## License
-> The use and distribution of the software is permitted as long as it is not used for commercial purposes and the respective credits are attached. If anyone wants to use it for profit, they should consult me.
+> The software may be used and distributed for non-commercial purposes with proper credits. For commercial use, please contact me.
